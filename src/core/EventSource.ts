@@ -264,9 +264,7 @@ export default class EventSource {
     let line = '';
 
     for (let i = 0; i < parts.length; i++) {
-      const part = parts[i];
-      if (!part) continue;
-
+      const part = parts[i] ?? '';
       line = part.trim();
       if (line.startsWith('event')) {
         type = line.replace(/event:?\s*/, '');
