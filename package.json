@@ -1,7 +1,7 @@
 {
   "name": "react-native-ai-kit",
   "version": "0.1.0",
-  "description": "test",
+  "description": "AI chat toolkit for React Native — SSE streaming, chat hooks, and UI components for any LLM backend",
   "main": "./lib/module/index.js",
   "types": "./lib/typescript/src/index.d.ts",
   "exports": {
