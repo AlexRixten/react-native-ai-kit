@@ -19,34 +19,43 @@ import type { ToolCall } from '../types';
  * // => [{ type: 'function', name: 'search', input: { q: 'dose' } }]
  * ```
  */
+function parseToolCallArray(arr: unknown[]): ToolCall[] {
+  return arr.map((tc: unknown) => {
+    const tcRecord = tc as Record<string, unknown>;
+    const fn = (tcRecord.function || tcRecord) as Record<string, unknown>;
+    const args =
+      typeof fn.arguments === 'string'
+        ? JSON.parse(fn.arguments as string)
+        : fn.arguments;
+
+    return {
+      type: String(tcRecord.type || 'function'),
+      name: String(fn.name || ''),
+      input: (args || {}) as Record<string, unknown>,
+    };
+  });
+}
+
 export function extractToolCalls(data: unknown): ToolCall[] {
   // Case 1: OpenAI-style response object with tool_calls
   if (typeof data === 'object' && data !== null) {
     const record = data as Record<string, unknown>;
     if (Array.isArray(record.tool_calls)) {
-      return record.tool_calls.map((tc: unknown) => {
-        const tcRecord = tc as Record<string, unknown>;
-        const fn = (tcRecord.function || tcRecord) as Record<string, unknown>;
-        const args =
-          typeof fn.arguments === 'string'
-            ? JSON.parse(fn.arguments as string)
-            : fn.arguments;
+      return parseToolCallArray(record.tool_calls);
+    }
 
-        return {
-          type: String(tcRecord.type || 'function'),
-          name: String(fn.name || ''),
-          input: (args || {}) as Record<string, unknown>,
-        };
-      });
+    // Case 2: Direct array of tool calls
+    if (Array.isArray(data)) {
+      return parseToolCallArray(data);
     }
   }
 
-  // Case 2: Raw JSON string with array of tool calls
+  // Case 3: Raw JSON string with array of tool calls
   if (typeof data === 'string') {
     try {
       const parsed: unknown = JSON.parse(data);
       if (Array.isArray(parsed)) {
-        return extractToolCalls(parsed);
+        return parseToolCallArray(parsed);
       }
     } catch {
       // Not valid JSON
